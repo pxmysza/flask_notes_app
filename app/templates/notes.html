@@ -2,5 +2,31 @@
 {% block title %}Notes{% endblock %}
 
 {% block content %}
-
+{% if not notes %}
+<h1>No notes have been created yet</h1>
+{% else %}
+{% for note in notes %}
+<div class="row justify-content-md-center">
+    <div class="col-sm-4">
+        <div class="mb-3">
+            <div class="card" style="width: 18rem;">
+                <div class="card">
+                    <div class="card-header">
+                        {{note.title}}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{moment(note._time_created).format('LLL')}}</h5>
+                        <p class="card-text">{{note.content}}</p>
+                        <div class="btn-group">
+                            <a href="/edit_note/{{note.id}}" class="btn btn-primary">Edit note</a>
+                            <a href="/delete_note/{{note.id}}" class="btn btn-danger">Delete note</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
 {% endblock %}

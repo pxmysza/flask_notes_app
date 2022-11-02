@@ -1,3 +1,3 @@
-from .note import NoteForm
-from .user import UserForm
+from .note_form import NoteForm
+from .user_form import UserForm
 from .login_form import LoginForm

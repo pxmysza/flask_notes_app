@@ -9,6 +9,8 @@ login_blueprint = Blueprint("login", __name__)
 register_blueprint = Blueprint("register", __name__)
 logout_blueprint = Blueprint("logout", __name__)
 add_note_blueprint = Blueprint("add_note", __name__)
+delete_note_blueprint = Blueprint("delete_note", __name__)
+edit_note_blueprint = Blueprint("edit_note", __name__)
 
 
 @display_notes_blueprint.route("/")
@@ -17,8 +19,8 @@ def notes():
         return redirect(url_for("login.login"))
     user = User.query.filter_by(username=session["username"]).first()
     notes = Note.query.filter_by(owner_id=user.id).all()
-    print(notes)
-    return render_template("notes.html")
+    return render_template("notes.html", notes=notes)
+
 
 @register_blueprint.route("/register", methods=["POST", "GET"])
 def register():
@@ -57,14 +59,16 @@ def login():
         return redirect(url_for("notes.notes"))
     return render_template("login.html", form=form)
 
+
 @logout_blueprint.route("/logout")
 def logout():
     if "username" in session:
-        session.pop("username")
+        session.clear()
         flash("You've been logged off successfully", "success")
         return redirect(url_for("login.login"))
     else:
         return abort(403)
+
 
 @add_note_blueprint.route("/add_note", methods=["GET", "POST"])
 def add_note():
@@ -81,9 +85,35 @@ def add_note():
     return render_template("new_note.html", form=form)
 
 
+@edit_note_blueprint.route("/edit_note/<int:id>", methods=["GET", "POST"])
+def edit_note(id):
+    if "username" not in session:
+        return abort(403)
+    user = User.query.filter_by(username=session["username"]).first()
+    note = Note.query.filter_by(id=id, owner_id=user.id).first()
+    form = NoteForm(obj=note)
+
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.content = form.content.data
+        db.session.commit()
+        return redirect(url_for("notes.notes"))
+    return render_template("edit_note.html", form=form, note=note)
+
+
+@delete_note_blueprint.route("/delete_note/<int:id>")
+def delete_note(id):
+    if "username" not in session:
+        return abort(403)
+    user = User.query.filter_by(username=session["username"]).first()
+    Note.query.filter_by(id=id, owner_id=user.id).delete()
+    db.session.commit()
+    return redirect(url_for("notes.notes"))
+
 
 def page_not_found(e):
     return render_template("404.html"), 404
+
 
 def dissalowed_resource(e):
     return render_template("403.html"), 403
